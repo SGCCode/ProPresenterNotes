@@ -25,6 +25,7 @@ fi
 
 sudo rsync -a --delete \
   --exclude '.DS_Store' \
+  --exclude '.venv' \
   --exclude 'Install Service.command' \
   --exclude 'Uninstall Service.command' \
   --exclude 'Service Status.command' \

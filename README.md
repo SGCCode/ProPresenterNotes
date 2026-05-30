@@ -1,6 +1,6 @@
 # ProPresenter Notes Controller for Mac
 
-A local web app for a Mac Studio that controls ProPresenter through the ProPresenter public REST API. It does **not** require Docker and does **not** require npm packages.
+A local web app for a Mac Studio that controls ProPresenter through the ProPresenter public REST API. It does **not** require Docker or npm packages. It now runs as a Flask application.
 
 ## What it does
 
@@ -9,7 +9,7 @@ A local web app for a Mac Studio that controls ProPresenter through the ProPrese
 - Provides Previous and Next buttons.
 - Supports keyboard navigation with Arrow Left, Arrow Right, Page Up, and Page Down.
 - Shows slide notes when your ProPresenter API exposes notes in the slide/status/presentation payloads.
-- Runs locally on the Mac Studio as a small Python web server.
+- Runs locally on the Mac Studio as a Flask web application.
 - Can install as a macOS system service using `launchd`.
 
 ## Requirements
@@ -19,7 +19,7 @@ A local web app for a Mac Studio that controls ProPresenter through the ProPrese
 - ProPresenter running with its public/network API enabled.
 - Administrator access for the system service installer.
 
-No Docker, Node, npm, or Python package installation is needed.
+No Docker, Node, or npm installation is needed. The startup scripts create a local Python virtual environment and install the Python dependencies from `requirements.txt`.
 
 ## Configure ProPresenter
 
@@ -156,4 +156,4 @@ Change `app_port` in `config.json`, then restart the app or service.
 
 ### Notes are blank
 
-Different ProPresenter versions expose note text differently through the public API. This app scans common fields such as `notes`, `slideNotes`, `speakerNotes`, `presenterNotes`, and `stageNotes`. If your version exposes notes under a different field or endpoint, update the helper functions near the top of `server.py`.
+Different ProPresenter versions expose note text differently through the public API. This app scans common fields such as `notes`, `slideNotes`, `speakerNotes`, `presenterNotes`, and `stageNotes`. If your version exposes notes under a different field or endpoint, update the parsing helpers in `propresenter_notes/services.py`.
