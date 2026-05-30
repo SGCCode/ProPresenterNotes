@@ -8,7 +8,14 @@ from flask import Blueprint, Response, current_app, jsonify, render_template, re
 
 from .client import ProPresenterClient, ProPresenterError
 from .config import Settings
-from .services import get_presentations, get_slide_state, try_paths
+from .services import (
+    build_presentation_cache,
+    get_presentation,
+    get_presentations,
+    get_slide_state,
+    presentation_fingerprint,
+    try_paths,
+)
 
 bp = Blueprint("main", __name__)
 
@@ -66,6 +73,19 @@ def api_library(library_id: str) -> Response:
 @bp.get("/api/presentations")
 def api_presentations() -> Response:
     return jsonify(get_presentations(_client()))
+
+
+@bp.get("/api/presentation-cache/<path:presentation_id>")
+def api_presentation_cache(presentation_id: str) -> Response:
+    return jsonify(build_presentation_cache(_client(), presentation_id))
+
+
+@bp.get("/api/presentation-fingerprint/<path:presentation_id>")
+def api_presentation_fingerprint(presentation_id: str) -> tuple[Response, int]:
+    presentation = get_presentation(_client(), presentation_id)
+    if presentation is None:
+        return jsonify({"error": "Could not read presentation from ProPresenter"}), 404
+    return jsonify({"presentationId": presentation_id, "fingerprint": presentation_fingerprint(presentation)}), 200
 
 
 @bp.get("/api/slide-state")

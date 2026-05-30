@@ -13,7 +13,7 @@
         <h1>ProPresenter Notes</h1>
         <p id="connection">Checking connection...</p>
       </div>
-      <button id="refresh">Refresh</button>
+      <button id="refresh" title="Reload the selected presentation">Refresh</button>
     </section>
 
     <section class="panel controls">
@@ -28,6 +28,14 @@
         <button id="previous" class="navButton">◀ Previous</button>
         <button id="next" class="navButton primary">Next ▶</button>
       </div>
+    </section>
+
+    <section class="panel slideBrowser" aria-labelledby="slideBrowserTitle">
+      <div class="meta">
+        <h2 id="slideBrowserTitle">Slides</h2>
+        <span id="cacheStatus">Select a presentation to load slide thumbnails.</span>
+      </div>
+      <div id="thumbnailStrip" class="thumbnailStrip" aria-label="Presentation slides"></div>
     </section>
 
     <section class="panel now">
