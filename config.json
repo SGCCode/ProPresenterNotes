@@ -4,5 +4,6 @@
   "propresenter_scheme": "http",
   "propresenter_host": "127.0.0.1",
   "propresenter_port": 52136,
-  "poll_timeout_ms": 2500
+  "poll_timeout_ms": 2500,
+  "ui_pin": ""
 }

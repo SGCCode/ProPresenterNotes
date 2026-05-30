@@ -1,6 +1,7 @@
 """Application factory for ProPresenter Notes."""
 from __future__ import annotations
 
+import secrets
 from pathlib import Path
 
 from flask import Flask, Response, jsonify
@@ -22,6 +23,7 @@ def create_app(settings: Settings | None = None) -> Flask:
         template_folder="templates",
     )
     app.config["APP_SETTINGS"] = settings
+    app.config["APP_ACCESS_TOKEN"] = secrets.token_urlsafe(32)
     app.extensions["propresenter_client"] = ProPresenterClient(
         settings.propresenter_base_url,
         settings.timeout_seconds,

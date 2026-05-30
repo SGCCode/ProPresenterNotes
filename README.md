@@ -36,7 +36,8 @@ Before installing the service, edit `config.json` in this folder:
   "propresenter_scheme": "http",
   "propresenter_host": "127.0.0.1",
   "propresenter_port": 1025,
-  "poll_timeout_ms": 2500
+  "poll_timeout_ms": 2500,
+  "ui_pin": ""
 }
 ```
 
@@ -47,6 +48,17 @@ Use the ProPresenter computer's LAN IP address when ProPresenter is running on a
 ```json
 "propresenter_host": "192.168.1.50"
 ```
+
+
+### Restrict UI access with a PIN
+
+Set `ui_pin` in `config.json` to require a PIN before anyone can open the controller UI or call its API endpoints:
+
+```json
+"ui_pin": "1234"
+```
+
+Leave `ui_pin` empty to disable the lock screen. You can also set the `UI_PIN` environment variable, which takes precedence over `config.json`. After changing the PIN, restart the app or service.
 
 ## Install as a macOS system service
 
