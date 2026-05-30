@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Unlock ProPresenter Notes</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="loginApp">
+    <section class="panel loginPanel" aria-labelledby="loginTitle">
+      <h1 id="loginTitle">Enter PIN</h1>
+      <p>Access to ProPresenter Notes is restricted.</p>
+      <form method="post" class="loginForm">
+        <input type="hidden" name="next" value="{{ next_url }}" />
+        <label>
+          PIN
+          <input name="pin" type="password" inputmode="numeric" autocomplete="current-password" autofocus required />
+        </label>
+        {% if error %}<p class="statusBad" role="alert">{{ error }}</p>{% endif %}
+        <button type="submit" class="primary">Unlock</button>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

@@ -160,3 +160,43 @@ h2 {
     grid-auto-columns: minmax(130px, 72vw);
   }
 }
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topActions form {
+  margin: 0;
+}
+
+.secondary {
+  background: #111827;
+}
+
+.loginApp {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.loginPanel {
+  width: min(420px, 100%);
+}
+
+.loginForm {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+input {
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 14px;
+  background: #0f172a;
+  color: #f8fafc;
+  font: inherit;
+  padding: 12px 14px;
+}

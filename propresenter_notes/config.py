@@ -17,6 +17,7 @@ class Settings:
     propresenter_host: str = "127.0.0.1"
     propresenter_port: int = 1025
     poll_timeout_ms: int = 2500
+    ui_pin: str = ""
 
     @property
     def propresenter_base_url(self) -> str:
@@ -60,4 +61,5 @@ def load_settings(config_path: Path) -> Settings:
             os.environ.get("POLL_TIMEOUT_MS", data.get("poll_timeout_ms")),
             Settings.poll_timeout_ms,
         ),
+        ui_pin=str(os.environ.get("UI_PIN", data.get("ui_pin", Settings.ui_pin))).strip(),
     )
