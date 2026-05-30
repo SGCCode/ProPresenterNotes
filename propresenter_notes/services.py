@@ -1,6 +1,9 @@
 """Application services for presentation discovery and slide state parsing."""
 from __future__ import annotations
 
+import base64
+import hashlib
+import json
 import urllib.parse
 from typing import Any
 
@@ -30,6 +33,13 @@ def get_presentation_thumbnail(
     except Exception:
         pass
     return None
+
+
+def presentation_fingerprint(presentation: dict[str, Any] | None) -> str:
+    if not presentation:
+        return ""
+    encoded = json.dumps(presentation, sort_keys=True, default=str, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def first_non_empty_string(*values: Any) -> str:
@@ -131,9 +141,15 @@ def find_slide_title(status: Any) -> str:
     if not isinstance(status, dict):
         return ""
     return first_non_empty_string(
+        status.get("label"),
         status.get("name"),
+        status.get("text"),
+        nested(status, "slide", "label"),
         nested(status, "slide", "name"),
+        nested(status, "slide", "text"),
+        nested(status, "cue", "label"),
         nested(status, "cue", "name"),
+        nested(status, "cue", "text"),
         nested(status, "presentation", "name"),
         nested(status, "id", "name"),
     )
@@ -176,6 +192,86 @@ def flatten_presentations(
             if isinstance(node.get(key), list):
                 flatten_presentations(node[key], node_library_id, out)
     return out
+
+
+def presentation_body(presentation: Any) -> Any:
+    if isinstance(presentation, dict) and isinstance(presentation.get("presentation"), dict):
+        return presentation["presentation"]
+    return presentation
+
+
+def presentation_slides(presentation: Any) -> list[Any]:
+    body = presentation_body(presentation)
+    if isinstance(body, list):
+        return body
+    if not isinstance(body, dict):
+        return []
+
+    grouped_slides: list[Any] = []
+    groups = body.get("groups")
+    if isinstance(groups, list):
+        for group in groups:
+            if isinstance(group, dict) and isinstance(group.get("slides"), list):
+                grouped_slides.extend(group["slides"])
+        if grouped_slides:
+            return grouped_slides
+
+    candidates = [
+        body.get("slides"),
+        body.get("cues"),
+        body.get("items"),
+        nested(body, "presentation", "slides"),
+        nested(body, "presentation", "cues"),
+        nested(body, "presentation", "items"),
+    ]
+    for candidate in candidates:
+        if isinstance(candidate, list):
+            return candidate
+    return []
+
+
+def slide_title(slide: Any, index: int) -> str:
+    title = find_slide_title(slide) if isinstance(slide, dict) else ""
+    return title or f"Slide {index + 1}"
+
+
+def thumbnail_data_url(client: ProPresenterClient, presentation_id: str, slide_index: int) -> str:
+    image_bytes = get_presentation_thumbnail(client, presentation_id, slide_index)
+    if not image_bytes:
+        return ""
+    encoded = base64.b64encode(image_bytes).decode("ascii")
+    return f"data:image/jpeg;base64,{encoded}"
+
+
+def build_presentation_cache(client: ProPresenterClient, presentation_id: str) -> dict[str, Any]:
+    presentation = get_presentation(client, presentation_id)
+    if presentation is None:
+        raise ProPresenterError("Could not read presentation from ProPresenter", status_code=404)
+
+    slides = presentation_slides(presentation)
+    cached_slides = []
+    for index, slide in enumerate(slides):
+        cached_slides.append(
+            {
+                "index": index,
+                "number": index + 1,
+                "title": slide_title(slide, index),
+                "notes": find_notes(slide),
+                "thumbnail": thumbnail_data_url(client, presentation_id, index),
+            }
+        )
+
+    body = presentation_body(presentation)
+
+    return {
+        "presentationId": presentation_id,
+        "title": first_non_empty_string(body.get("name"), nested(body, "id", "name"))
+        if isinstance(body, dict)
+        else "",
+        "fingerprint": presentation_fingerprint(presentation),
+        "slides": cached_slides,
+        "raw": presentation,
+    }
 
 
 def try_paths(client: ProPresenterClient, paths: list[str]) -> dict[str, Any]:
@@ -243,11 +339,7 @@ def get_slide_state(client: ProPresenterClient, library_id: str, presentation_id
         detail = try_paths(client, detail_paths)
         if detail.get("ok"):
             d = detail.get("data")
-            slides = []
-            if isinstance(d, dict):
-                slides = d.get("slides") or d.get("cues") or d.get("items") or nested(d, "presentation", "slides") or []
-            elif isinstance(d, list):
-                slides = d
+            slides = presentation_slides(d)
             slide = slides[slide_index] if isinstance(slides, list) and slide_index < len(slides) else None
             notes = notes or find_notes(slide)
             title = title or find_slide_title(slide)

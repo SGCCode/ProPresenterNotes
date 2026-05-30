@@ -63,3 +63,100 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 
 .statusGood { color: #86efac; }
 .statusBad { color: #fca5a5; }
+
+h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+#refresh.needsRefresh {
+  border-color: #fde047;
+  color: #fef3c7;
+  animation: refreshGlow 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes refreshGlow {
+  from { box-shadow: 0 0 0 rgba(250, 204, 21, 0); }
+  to { box-shadow: 0 0 22px rgba(250, 204, 21, 0.9); }
+}
+
+.slideBrowser .meta {
+  margin-bottom: 14px;
+}
+
+#cacheStatus {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  text-align: right;
+}
+
+.statusWarn {
+  color: #fde68a !important;
+}
+
+.thumbnailStrip {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(150px, 190px);
+  gap: 14px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 4px 4px 12px;
+}
+
+.thumbnailCard {
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 16px;
+  background: #020617;
+  text-align: left;
+}
+
+.thumbnailCard:hover,
+.thumbnailCard.active {
+  border-color: #93c5fd;
+  background: #172554;
+}
+
+.thumbnailCard.active {
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.35);
+}
+
+.thumbnailCard img,
+.thumbnailPlaceholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #1e293b;
+}
+
+.thumbnailPlaceholder {
+  display: grid;
+  place-items: center;
+  color: #93c5fd;
+  font-weight: 800;
+}
+
+.thumbnailCard span {
+  min-height: 2.5em;
+  color: #e5e7eb;
+  font-size: 0.92rem;
+  line-height: 1.25;
+}
+
+.emptySlides {
+  margin: 0;
+  color: #cbd5e1;
+}
+
+@media (max-width: 700px) {
+  #cacheStatus {
+    text-align: left;
+  }
+
+  .thumbnailStrip {
+    grid-auto-columns: minmax(130px, 72vw);
+  }
+}
