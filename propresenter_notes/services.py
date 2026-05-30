@@ -141,9 +141,15 @@ def find_slide_title(status: Any) -> str:
     if not isinstance(status, dict):
         return ""
     return first_non_empty_string(
+        status.get("label"),
         status.get("name"),
+        status.get("text"),
+        nested(status, "slide", "label"),
         nested(status, "slide", "name"),
+        nested(status, "slide", "text"),
+        nested(status, "cue", "label"),
         nested(status, "cue", "name"),
+        nested(status, "cue", "text"),
         nested(status, "presentation", "name"),
         nested(status, "id", "name"),
     )
@@ -188,18 +194,35 @@ def flatten_presentations(
     return out
 
 
+def presentation_body(presentation: Any) -> Any:
+    if isinstance(presentation, dict) and isinstance(presentation.get("presentation"), dict):
+        return presentation["presentation"]
+    return presentation
+
+
 def presentation_slides(presentation: Any) -> list[Any]:
-    if isinstance(presentation, list):
-        return presentation
-    if not isinstance(presentation, dict):
+    body = presentation_body(presentation)
+    if isinstance(body, list):
+        return body
+    if not isinstance(body, dict):
         return []
+
+    grouped_slides: list[Any] = []
+    groups = body.get("groups")
+    if isinstance(groups, list):
+        for group in groups:
+            if isinstance(group, dict) and isinstance(group.get("slides"), list):
+                grouped_slides.extend(group["slides"])
+        if grouped_slides:
+            return grouped_slides
+
     candidates = [
-        presentation.get("slides"),
-        presentation.get("cues"),
-        presentation.get("items"),
-        nested(presentation, "presentation", "slides"),
-        nested(presentation, "presentation", "cues"),
-        nested(presentation, "presentation", "items"),
+        body.get("slides"),
+        body.get("cues"),
+        body.get("items"),
+        nested(body, "presentation", "slides"),
+        nested(body, "presentation", "cues"),
+        nested(body, "presentation", "items"),
     ]
     for candidate in candidates:
         if isinstance(candidate, list):
@@ -238,10 +261,12 @@ def build_presentation_cache(client: ProPresenterClient, presentation_id: str) -
             }
         )
 
+    body = presentation_body(presentation)
+
     return {
         "presentationId": presentation_id,
-        "title": first_non_empty_string(presentation.get("name"), nested(presentation, "id", "name"))
-        if isinstance(presentation, dict)
+        "title": first_non_empty_string(body.get("name"), nested(body, "id", "name"))
+        if isinstance(body, dict)
         else "",
         "fingerprint": presentation_fingerprint(presentation),
         "slides": cached_slides,
