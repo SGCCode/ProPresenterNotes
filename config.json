@@ -1,0 +1,8 @@
+{
+  "app_host": "0.0.0.0",
+  "app_port": 3000,
+  "propresenter_scheme": "http",
+  "propresenter_host": "127.0.0.1",
+  "propresenter_port": 52136,
+  "poll_timeout_ms": 2500
+}

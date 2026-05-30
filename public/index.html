@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ProPresenter Notes Controller</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="app">
+    <section class="panel topbar">
+      <div>
+        <h1>ProPresenter Notes</h1>
+        <p id="connection">Checking connection...</p>
+      </div>
+      <button id="refresh">Refresh</button>
+    </section>
+
+    <section class="panel controls">
+      <label>
+        Presentation
+        <select id="presentationSelect">
+          <option value="">Loading presentations...</option>
+        </select>
+      </label>
+
+      <div class="buttonRow">
+        <button id="previous" class="navButton">◀ Previous</button>
+        <button id="next" class="navButton primary">Next ▶</button>
+      </div>
+    </section>
+
+    <section class="panel now">
+      <div class="meta">
+        <span id="slideNumber">Slide —</span>
+        <span id="slideTitle"></span>
+      </div>
+      <pre id="notes">No notes loaded yet.</pre>
+    </section>
+
+    <section class="panel debug">
+      <details>
+        <summary>Raw slide status</summary>
+        <pre id="raw">{}</pre>
+      </details>
+    </section>
+  </main>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
