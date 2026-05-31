@@ -12,6 +12,7 @@ FROM base AS test
 
 COPY server.py config.json ./
 COPY propresenter_notes/ ./propresenter_notes/
+COPY scripts/ ./scripts/
 COPY tests/ ./tests/
 
 CMD ["python", "-m", "unittest", "discover", "-s", "tests", "-v"]
