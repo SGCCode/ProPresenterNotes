@@ -106,6 +106,7 @@ class PresentationParsingTests(unittest.TestCase):
 
     def test_uuid_value_reads_nested_uuid_name_index_or_scalar(self):
         self.assertEqual("abc", uuid_value({"uuid": {"uuid": "abc"}}))
+        self.assertEqual("lib-1", uuid_value({"id": {"uuid": "lib-1", "name": "Library"}}))
         self.assertEqual("Library", uuid_value({"name": "Library"}))
         self.assertEqual("4", uuid_value({"index": 4}))
         self.assertEqual("plain", uuid_value("plain"))

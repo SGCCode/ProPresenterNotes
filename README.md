@@ -1,5 +1,7 @@
 # ProPresenter Notes Controller for Mac
 
+[![Tests](https://github.com/SGCCode/ProPresenterNotes/actions/workflows/tests.yml/badge.svg)](https://github.com/SGCCode/ProPresenterNotes/actions/workflows/tests.yml)
+
 A local web app for a Mac Studio that controls ProPresenter through the ProPresenter public REST API. It does **not** require Docker or npm packages. It now runs as a Flask application.
 
 ## What it does
@@ -165,7 +167,7 @@ docker build --target test -t propresenter-notes:test .
 docker run --rm propresenter-notes:test
 ```
 
-The test suite includes a local mock ProPresenter API server backed by the captured OpenAPI example payloads in `tests/propresenter_openapi_examples.json`. Those integration tests exercise the real `ProPresenterClient` over HTTP for `/version`, `/v1/libraries`, and `/v1/library/{library_id}` without requiring a running ProPresenter instance. As more Swagger examples are collected, add them to that fixture and extend `tests/mock_propresenter_api.py` so Docker and CI continue validating against the documented API contract.
+The test suite includes a local mock ProPresenter API server backed by the captured OpenAPI example payloads in `tests/propresenter_openapi_examples.json`. Those integration tests exercise the real `ProPresenterClient` over HTTP for `/version`, `/v1/libraries`, and `/v1/library/{library_id}` without requiring a running ProPresenter instance. The checked-in Swagger export at `tests/swagger.json` is also parsed by contract tests so app-generated ProPresenter requests and representative fixture examples stay aligned with the documented API paths. As more Swagger examples are collected, add them to that fixture and extend `tests/mock_propresenter_api.py` so Docker and CI continue validating against the documented API contract.
 
 To capture examples from a real ProPresenter system for review, run:
 
