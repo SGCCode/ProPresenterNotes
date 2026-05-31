@@ -119,7 +119,9 @@ h2 {
   --thumbnail-min: clamp(104px, 16vw, 168px);
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--thumbnail-min)), 1fr));
-  gap: 12px;
+  gap: var(--thumbnail-gap, 12px);
+  grid-auto-rows: max-content;
+  align-items: start;
   max-height: min(42vh, 360px);
   overflow-x: hidden;
   overflow-y: auto;
@@ -130,8 +132,9 @@ h2 {
 }
 
 .thumbnailCard {
-  display: block;
+  display: grid;
   min-width: 0;
+  width: 100%;
   padding: 6px;
   border-radius: 16px;
   background: #020617;
@@ -153,6 +156,8 @@ h2 {
   width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: 10px;
+  display: block;
+  min-width: 0;
   object-fit: cover;
   background: #1e293b;
 }
@@ -241,8 +246,8 @@ input {
   }
 
   .thumbnailStrip {
-    --thumbnail-min: clamp(112px, 10vw, 164px);
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--thumbnail-min)), 1fr));
+    --thumbnail-gap: clamp(10px, 1.2vw, 16px);
+    grid-template-columns: minmax(0, 1fr);
     align-content: start;
     flex: 1;
     max-height: none;
@@ -258,6 +263,13 @@ input {
 @media (min-width: 1200px) {
   .app {
     --thumbnail-sidebar-width: clamp(300px, 26vw, 420px);
+  }
+}
+
+@media (min-width: 1400px) and (hover: hover) and (pointer: fine) {
+  .thumbnailStrip {
+    --thumbnail-min: clamp(132px, 10vw, 180px);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--thumbnail-min)), 1fr));
   }
 }
 
