@@ -27,6 +27,11 @@ const selectionStorageKey = 'propresenter-notes-selection';
 const presentationsStorageKey = 'propresenter-notes-presentations';
 const presentationCacheStoragePrefix = 'propresenter-notes-cache:';
 
+const debugEnabled = ['1', 'true', 'yes'].includes(
+  new URLSearchParams(window.location.search).get('debug')?.toLowerCase() || ''
+);
+document.body.classList.toggle('debugEnabled', debugEnabled);
+
 function readStoredSelection() {
   try {
     return JSON.parse(window.localStorage.getItem(selectionStorageKey) || '{}');
