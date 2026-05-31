@@ -20,7 +20,7 @@ A local web app for a Mac Studio that controls ProPresenter through the ProPrese
 - ProPresenter running with its public/network API enabled.
 - Administrator access for the system service installer.
 
-No Docker, Node, or npm installation is needed. The startup scripts create a local Python virtual environment and install the Python dependencies from `requirements.txt`.
+Docker, Node, and npm are not needed for the macOS service path. The startup scripts create a local Python virtual environment and install the Python dependencies from `requirements.txt`. Docker is also available as an optional deployment path.
 
 ## Configure ProPresenter
 
@@ -150,21 +150,41 @@ Then open:
 http://127.0.0.1:3000
 ```
 
-## Docker alternative
+## Run with Docker
 
-Docker is an optional deployment path; the macOS service scripts above remain supported. Build and run the app with:
+Docker is an optional deployment path; the macOS service scripts above remain supported. Build the image from this folder with:
 
 ```bash
-docker compose up --build
+docker build -t propresenter-notes .
 ```
 
-The compose file exposes the web UI on:
+When ProPresenter is running on the same Mac as Docker, run the container with `PROPRESENTER_HOST=host.docker.internal` and set `PROPRESENTER_PORT` to the API port shown in **Settings > Network**:
+
+```bash
+docker run --rm -p 3000:3000 -e APP_HOST=0.0.0.0 -e PROPRESENTER_HOST=host.docker.internal -e PROPRESENTER_PORT=<port> propresenter-notes
+```
+
+Then open the web UI at:
 
 ```text
 http://127.0.0.1:3000
 ```
 
-When ProPresenter is running on the Docker host, keep `PROPRESENTER_HOST=host.docker.internal` and update `PROPRESENTER_PORT` in `docker-compose.yml` to match the API port shown in **Settings > Network**. You can also override these values at runtime with environment variables.
+When ProPresenter is running on another machine, use that machine's LAN IP address for `PROPRESENTER_HOST` and set `PROPRESENTER_PORT` to its API port. For example:
+
+```bash
+docker run --rm -p 3000:3000 -e APP_HOST=0.0.0.0 -e PROPRESENTER_HOST=192.168.1.50 -e PROPRESENTER_PORT=<port> propresenter-notes
+```
+
+Inside Docker, `127.0.0.1` refers to the container itself, not the Mac host. Use `host.docker.internal` for ProPresenter on the same Mac, or the ProPresenter machine's LAN IP address for ProPresenter on another computer.
+
+If you prefer Docker Compose, you can also run:
+
+```bash
+docker compose up --build
+```
+
+The compose file exposes the web UI on `http://127.0.0.1:3000`.
 
 ## Troubleshooting
 
