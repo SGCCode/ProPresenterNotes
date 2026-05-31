@@ -19,6 +19,25 @@ let selectedCache = null;
 let changeTimer = null;
 let touchStart = null;
 
+const selectionStorageKey = 'propresenter-notes-selection';
+
+function readStoredSelection() {
+  try {
+    return JSON.parse(window.localStorage.getItem(selectionStorageKey) || '{}');
+  } catch (err) {
+    return {};
+  }
+}
+
+function writeStoredSelection(updates) {
+  try {
+    const nextSelection = { ...readStoredSelection(), ...updates };
+    window.localStorage.setItem(selectionStorageKey, JSON.stringify(nextSelection));
+  } catch (err) {
+    // Ignore storage failures so the controller still works in private browsing modes.
+  }
+}
+
 async function request(path, options = {}) {
   const response = await fetch(path, {
     ...options,
@@ -78,7 +97,8 @@ async function checkHealth() {
 }
 
 async function loadPresentations(keepCurrent = false) {
-  const previousId = keepCurrent ? selectedPresentationId() : '';
+  const storedSelection = readStoredSelection();
+  const previousId = keepCurrent ? selectedPresentationId() : storedSelection.presentationId || '';
   presentations = await request('/api/presentations');
   el.presentationSelect.innerHTML = '';
 
@@ -102,6 +122,7 @@ async function loadPresentations(keepCurrent = false) {
   const nextIndex = previousIndex >= 0 ? previousIndex : 0;
   selected = presentations[nextIndex];
   el.presentationSelect.value = String(nextIndex);
+  writeStoredSelection({ presentationId: selectedPresentationId() });
 }
 
 function slideNotes(slide) {
@@ -126,6 +147,10 @@ function showSlide(index) {
 
   const clampedIndex = Math.max(0, Math.min(index, selectedCache.slides.length - 1));
   selectedSlideIndex = clampedIndex;
+  writeStoredSelection({
+    presentationId: selectedPresentationId(),
+    slideIndex: clampedIndex
+  });
   const slide = selectedCache.slides[clampedIndex];
   el.slideNumber.textContent = `Slide ${slide.number ?? clampedIndex + 1}`;
   el.slideTitle.textContent = slide.title || '';
@@ -180,7 +205,7 @@ function renderSlides() {
   });
 }
 
-async function loadSelectedPresentationCache() {
+async function loadSelectedPresentationCache(preferredSlideIndex = selectedSlideIndex) {
   const presentationId = selectedPresentationId();
   if (!presentationId) {
     selectedCache = null;
@@ -195,9 +220,9 @@ async function loadSelectedPresentationCache() {
   setCacheStatus('Loading presentation thumbnails and notes...');
   try {
     selectedCache = await request(`/api/presentation-cache/${encodeURIComponent(presentationId)}`);
-    selectedSlideIndex = 0;
+    const slideIndex = Number.isFinite(preferredSlideIndex) ? preferredSlideIndex : 0;
     renderSlides();
-    showSlide(0);
+    showSlide(slideIndex);
     setCacheStatus(`Cached ${selectedCache.slides.length} slides. Notes will stay unchanged until you refresh.`);
     startChangeWatcher();
   } catch (err) {
@@ -275,15 +300,15 @@ function handleTouchEnd(event) {
 el.refresh.addEventListener('click', async () => {
   await checkHealth();
   await loadPresentations(true);
-  await loadSelectedPresentationCache();
+  await loadSelectedPresentationCache(selectedSlideIndex);
 });
 
 el.presentationSelect.addEventListener('change', async () => {
   selected = presentations[Number(el.presentationSelect.value)] || null;
   if (selected) {
-    await triggerSlide(0);
+    writeStoredSelection({ presentationId: selectedPresentationId(), slideIndex: 0 });
   }
-  await loadSelectedPresentationCache();
+  await loadSelectedPresentationCache(0);
 });
 
 el.previous.addEventListener('click', () => trigger('previous'));
@@ -297,8 +322,8 @@ document.addEventListener('keydown', (event) => {
 });
 
 await checkHealth();
+const storedSelection = readStoredSelection();
+const storedSlideIndex = Number(storedSelection.slideIndex);
 await loadPresentations();
-if (selected) {
-  await triggerSlide(0);
-}
-await loadSelectedPresentationCache();
+const shouldRestoreStoredSlide = selectedPresentationId() === storedSelection.presentationId;
+await loadSelectedPresentationCache(shouldRestoreStoredSlide && Number.isFinite(storedSlideIndex) ? storedSlideIndex : 0);
