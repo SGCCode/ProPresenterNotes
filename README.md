@@ -150,6 +150,23 @@ Then open:
 http://127.0.0.1:3000
 ```
 
+## Run tests
+
+Run the Python unit test suite locally with:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+Run the same test suite in Docker with the test build target used by CI:
+
+```bash
+docker build --target test -t propresenter-notes:test .
+docker run --rm propresenter-notes:test
+```
+
+GitHub Actions runs the Dockerized test suite on pushes to `main`, pull requests, and manual workflow dispatches.
+
 ## Run with Docker
 
 Docker is an optional deployment path; the macOS service scripts above remain supported. Build the image from this folder with:
