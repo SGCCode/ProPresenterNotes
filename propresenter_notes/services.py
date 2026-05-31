@@ -166,6 +166,8 @@ def nested(obj: Any, *keys: str) -> Any:
 
 def uuid_value(value: Any) -> str:
     if isinstance(value, dict):
+        if isinstance(value.get("id"), dict):
+            return uuid_value(value["id"])
         if isinstance(value.get("uuid"), dict):
             return uuid_value(value["uuid"])
         return str(value.get("uuid") or value.get("name") or value.get("index") or "")
