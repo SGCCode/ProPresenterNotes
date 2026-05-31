@@ -19,6 +19,8 @@ let selectedLibraryId = '';
 let selectedSlideIndex = 0;
 let selectedCache = null;
 let changeTimer = null;
+let pendingSlideTrigger = null;
+let slideTriggerInFlight = false;
 let touchStart = null;
 
 const selectionStorageKey = 'propresenter-notes-selection';
@@ -346,9 +348,9 @@ function renderSlides() {
       button.appendChild(placeholder);
     }
 
-    button.addEventListener('click', async () => {
-      await triggerSlide(slide.index);
+    button.addEventListener('click', () => {
       showSlide(slide.index);
+      queueSlideTrigger(slide.index);
     });
     el.thumbnailStrip.appendChild(button);
   });
@@ -422,13 +424,38 @@ function startChangeWatcher() {
   changeTimer = setInterval(checkForPresentationChanges, 5000);
 }
 
-async function triggerSlide(index) {
-  if (!selected) return false;
+function queueSlideTrigger(index) {
+  const presentationId = selectedPresentationId();
+  if (!presentationId) return;
+
+  pendingSlideTrigger = { presentationId, index };
+  if (!slideTriggerInFlight) {
+    void flushSlideTriggerQueue();
+  }
+}
+
+async function flushSlideTriggerQueue() {
+  slideTriggerInFlight = true;
+  try {
+    while (pendingSlideTrigger) {
+      const trigger = pendingSlideTrigger;
+      pendingSlideTrigger = null;
+      await sendSlideTrigger(trigger);
+    }
+  } finally {
+    slideTriggerInFlight = false;
+    if (pendingSlideTrigger) {
+      void flushSlideTriggerQueue();
+    }
+  }
+}
+
+async function sendSlideTrigger({ presentationId, index }) {
   try {
     await request('/api/trigger/slide', {
       method: 'POST',
       body: JSON.stringify({
-        presentationId: selectedPresentationId(),
+        presentationId,
         index
       })
     });
@@ -440,19 +467,17 @@ async function triggerSlide(index) {
   }
 }
 
-async function trigger(direction) {
+function trigger(direction) {
   if (!selectedCache?.slides?.length) return;
 
-  el.previous.disabled = true;
-  el.next.disabled = true;
-  try {
-    const delta = direction === 'next' ? 1 : -1;
-    const nextIndex = Math.max(0, Math.min(selectedSlideIndex + delta, selectedCache.slides.length - 1));
-    await triggerSlide(nextIndex);
-    showSlide(nextIndex);
-  } finally {
-    updateNavState();
-  }
+  const delta = direction === 'next' ? 1 : -1;
+  const nextIndex = Math.max(0, Math.min(selectedSlideIndex + delta, selectedCache.slides.length - 1));
+  if (nextIndex === selectedSlideIndex) return;
+
+  // Keep speaker notes responsive even when the ProPresenter API is slow or unavailable.
+  // The API request is queued in the background and coalesced to the latest requested slide.
+  showSlide(nextIndex);
+  queueSlideTrigger(nextIndex);
 }
 
 function handleTouchStart(event) {
