@@ -5,6 +5,7 @@
   color: #f9fafb;
   --page-gutter: clamp(12px, 4vw, 32px);
   --touch-target: 48px;
+  --nav-dock-height: 92px;
 }
 
 * { box-sizing: border-box; }
@@ -18,8 +19,9 @@ body {
 button, select, input { font: inherit; }
 
 .app {
-  width: min(1100px, calc(100% - (var(--page-gutter) * 2)));
+  width: min(1280px, calc(100% - (var(--page-gutter) * 2)));
   margin: 24px auto;
+  padding-bottom: calc(var(--nav-dock-height) + env(safe-area-inset-bottom));
   display: grid;
   gap: 16px;
 }
@@ -66,6 +68,24 @@ button:hover { background: #1e293b; }
 button:disabled { opacity: .55; cursor: not-allowed; }
 .primary { background: #2563eb; border-color: #60a5fa; }
 .primary:hover { background: #1d4ed8; }
+.buttonRow {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(130px, 1fr));
+  gap: 10px;
+  width: min(420px, calc(100% - (var(--page-gutter) * 2)));
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 22px;
+  background: rgba(3, 7, 18, 0.82);
+  box-shadow: 0 16px 44px rgba(0,0,0,0.38);
+  backdrop-filter: blur(14px);
+  transform: translateX(-50%);
+}
+
 .navButton { min-width: 150px; font-weight: 700; }
 
 .now { min-height: 420px; display: flex; flex-direction: column; }
@@ -80,6 +100,8 @@ button:disabled { opacity: .55; cursor: not-allowed; }
   margin: 24px 0 0;
   touch-action: pan-y;
 }
+.debug { display: none; }
+body.debugEnabled .debug { display: block; }
 .debug pre { white-space: pre-wrap; overflow-x: auto; color: #cbd5e1; }
 
 .statusGood { color: #86efac; }
@@ -119,7 +141,9 @@ h2 {
   --thumbnail-min: clamp(104px, 16vw, 168px);
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--thumbnail-min)), 1fr));
-  gap: 12px;
+  gap: var(--thumbnail-gap, 12px);
+  grid-auto-rows: max-content;
+  align-items: start;
   max-height: min(42vh, 360px);
   overflow-x: hidden;
   overflow-y: auto;
@@ -130,8 +154,9 @@ h2 {
 }
 
 .thumbnailCard {
-  display: block;
+  display: grid;
   min-width: 0;
+  width: 100%;
   padding: 6px;
   border-radius: 16px;
   background: #020617;
@@ -153,6 +178,8 @@ h2 {
   width: 100%;
   aspect-ratio: 16 / 9;
   border-radius: 10px;
+  display: block;
+  min-width: 0;
   object-fit: cover;
   background: #1e293b;
 }
@@ -209,6 +236,80 @@ input {
   color: #fca5a5;
 }
 
+@media (min-width: 901px) {
+  .app {
+    --thumbnail-sidebar-width: clamp(176px, 20vw, 360px);
+    grid-template-columns: var(--thumbnail-sidebar-width) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .topbar,
+  .controls {
+    grid-column: 1 / -1;
+  }
+
+  .slideBrowser {
+    position: sticky;
+    top: 16px;
+    align-self: start;
+    max-height: calc(100dvh - 32px);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .slideBrowser .meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  #cacheStatus {
+    text-align: left;
+  }
+
+  .thumbnailStrip {
+    --thumbnail-gap: clamp(10px, 1.2vw, 16px);
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    flex: 1;
+    max-height: none;
+    min-height: 0;
+  }
+
+  .now,
+  .debug {
+    grid-column: 2;
+  }
+}
+
+@media (min-width: 1200px) {
+  .app {
+    --thumbnail-sidebar-width: clamp(300px, 26vw, 420px);
+  }
+}
+
+@media (min-width: 1400px) and (hover: hover) and (pointer: fine) {
+  .thumbnailStrip {
+    --thumbnail-min: clamp(132px, 10vw, 180px);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--thumbnail-min)), 1fr));
+  }
+}
+
+@media (min-width: 901px) and (max-height: 680px) {
+  .app {
+    margin-block: 16px;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+
+  .slideBrowser {
+    top: 12px;
+    max-height: calc(100dvh - 24px);
+  }
+}
+
 @media (max-width: 700px) {
   :root {
     --page-gutter: 10px;
@@ -230,7 +331,7 @@ input {
     min-height: 100dvh;
     margin: 0;
     gap: 10px;
-    padding: 10px 10px calc(116px + env(safe-area-inset-bottom));
+    padding: 10px 10px calc(var(--nav-dock-height) + 20px + env(safe-area-inset-bottom));
   }
 
   .panel {
@@ -290,19 +391,18 @@ input {
   }
 
   .buttonRow {
-    position: fixed;
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 20;
-    display: grid;
+    z-index: 30;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 10px;
+    width: auto;
     padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
+    border-width: 1px 0 0;
+    border-radius: 0;
     background: rgba(3, 7, 18, 0.94);
-    border-top: 1px solid rgba(255,255,255,0.12);
     box-shadow: 0 -12px 36px rgba(0,0,0,0.38);
-    backdrop-filter: blur(14px);
+    transform: none;
   }
 
   .navButton {
@@ -346,6 +446,10 @@ input {
 
   .debug {
     display: none;
+  }
+
+  body.debugEnabled .debug {
+    display: block;
   }
 
   .loginApp {
