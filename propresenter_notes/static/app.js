@@ -1,6 +1,7 @@
 const el = {
   connection: document.querySelector('#connection'),
   refresh: document.querySelector('#refresh'),
+  librarySelect: document.querySelector('#librarySelect'),
   presentationSelect: document.querySelector('#presentationSelect'),
   previous: document.querySelector('#previous'),
   next: document.querySelector('#next'),
@@ -14,6 +15,7 @@ const el = {
 
 let presentations = [];
 let selected = null;
+let selectedLibraryId = '';
 let selectedSlideIndex = 0;
 let selectedCache = null;
 let changeTimer = null;
@@ -62,10 +64,31 @@ function selectedPresentationId() {
   return selected ? idValue(selected.presentation) : '';
 }
 
-function labelFor(item) {
-  const lib = item.library?.name || item.library?.uuid || 'Library';
-  const pres = item.presentation?.name || item.presentation?.uuid || `Presentation ${item.presentation?.index ?? ''}`;
-  return `${lib} — ${pres}`;
+function libraryIdFor(item) {
+  return item?.libraryId || idValue(item?.library);
+}
+
+function selectedLibraryValue() {
+  return selected ? libraryIdFor(selected) : selectedLibraryId;
+}
+
+function libraryLabelFor(item) {
+  return item.library?.name || item.library?.uuid || item.libraryId || 'Library';
+}
+
+function presentationLabelFor(item) {
+  return item.presentation?.name || item.presentation?.uuid || `Presentation ${item.presentation?.index ?? ''}`;
+}
+
+function uniqueLibraries() {
+  const byId = new Map();
+  presentations.forEach((item) => {
+    const libraryId = libraryIdFor(item);
+    if (libraryId && !byId.has(libraryId)) {
+      byId.set(libraryId, { id: libraryId, label: libraryLabelFor(item) });
+    }
+  });
+  return [...byId.values()];
 }
 
 function setConnection(ok, message) {
@@ -96,33 +119,101 @@ async function checkHealth() {
   }
 }
 
-async function loadPresentations(keepCurrent = false) {
-  const storedSelection = readStoredSelection();
-  const previousId = keepCurrent ? selectedPresentationId() : storedSelection.presentationId || '';
-  presentations = await request('/api/presentations');
-  el.presentationSelect.innerHTML = '';
+function renderLibraryOptions(preferredLibraryId = '') {
+  const libraries = uniqueLibraries();
+  el.librarySelect.innerHTML = '';
 
-  if (!presentations.length) {
+  if (!libraries.length) {
     const option = document.createElement('option');
     option.value = '';
-    option.textContent = 'No presentations found';
+    option.textContent = 'No libraries found';
+    el.librarySelect.appendChild(option);
+    el.librarySelect.disabled = true;
+    selectedLibraryId = '';
+    return '';
+  }
+
+  libraries.forEach((library) => {
+    const option = document.createElement('option');
+    option.value = library.id;
+    option.textContent = library.label;
+    el.librarySelect.appendChild(option);
+  });
+
+  const nextLibraryId = libraries.some((library) => library.id === preferredLibraryId)
+    ? preferredLibraryId
+    : libraries[0].id;
+  el.librarySelect.disabled = libraries.length === 1;
+  el.librarySelect.value = nextLibraryId;
+  selectedLibraryId = nextLibraryId;
+  return nextLibraryId;
+}
+
+function renderPresentationOptions(libraryId, preferredPresentationId = '') {
+  const libraryPresentations = presentations
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => libraryIdFor(item) === libraryId);
+  el.presentationSelect.innerHTML = '';
+
+  if (!libraryPresentations.length) {
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = 'No presentations found in this library';
     el.presentationSelect.appendChild(option);
+    el.presentationSelect.disabled = true;
     selected = null;
     return;
   }
 
-  presentations.forEach((item, index) => {
+  libraryPresentations.forEach(({ item, index }) => {
     const option = document.createElement('option');
     option.value = String(index);
-    option.textContent = labelFor(item);
+    option.textContent = presentationLabelFor(item);
     el.presentationSelect.appendChild(option);
   });
 
-  const previousIndex = presentations.findIndex((item) => idValue(item.presentation) === previousId);
-  const nextIndex = previousIndex >= 0 ? previousIndex : 0;
-  selected = presentations[nextIndex];
-  el.presentationSelect.value = String(nextIndex);
-  writeStoredSelection({ presentationId: selectedPresentationId() });
+  const preferred = libraryPresentations.find(
+    ({ item }) => idValue(item.presentation) === preferredPresentationId
+  );
+  const next = preferred || libraryPresentations[0];
+  selected = next.item;
+  el.presentationSelect.disabled = false;
+  el.presentationSelect.value = String(next.index);
+}
+
+async function loadPresentations(keepCurrent = false) {
+  const storedSelection = readStoredSelection();
+  const previousId = keepCurrent ? selectedPresentationId() : storedSelection.presentationId || '';
+  const previousLibraryId = keepCurrent ? selectedLibraryValue() : storedSelection.libraryId || '';
+  presentations = await request('/api/presentations');
+
+  if (!presentations.length) {
+    el.librarySelect.innerHTML = '';
+    el.presentationSelect.innerHTML = '';
+
+    const libraryOption = document.createElement('option');
+    libraryOption.value = '';
+    libraryOption.textContent = 'No libraries found';
+    el.librarySelect.appendChild(libraryOption);
+
+    const presentationOption = document.createElement('option');
+    presentationOption.value = '';
+    presentationOption.textContent = 'No presentations found';
+    el.presentationSelect.appendChild(presentationOption);
+
+    el.librarySelect.disabled = true;
+    el.presentationSelect.disabled = true;
+    selected = null;
+    selectedLibraryId = '';
+    return;
+  }
+
+  const presentationLibraryId = presentations.find(
+    (item) => idValue(item.presentation) === previousId
+  );
+  const nextLibraryId = renderLibraryOptions(previousLibraryId || libraryIdFor(presentationLibraryId));
+  renderPresentationOptions(nextLibraryId, previousId);
+  writeStoredSelection({ libraryId: selectedLibraryValue(), presentationId: selectedPresentationId() });
 }
 
 function slideNotes(slide) {
@@ -148,6 +239,7 @@ function showSlide(index) {
   const clampedIndex = Math.max(0, Math.min(index, selectedCache.slides.length - 1));
   selectedSlideIndex = clampedIndex;
   writeStoredSelection({
+    libraryId: selectedLibraryValue(),
     presentationId: selectedPresentationId(),
     slideIndex: clampedIndex
   });
@@ -303,10 +395,26 @@ el.refresh.addEventListener('click', async () => {
   await loadSelectedPresentationCache(selectedSlideIndex);
 });
 
+el.librarySelect.addEventListener('change', async () => {
+  selectedLibraryId = el.librarySelect.value;
+  renderPresentationOptions(selectedLibraryId);
+  writeStoredSelection({
+    libraryId: selectedLibraryValue(),
+    presentationId: selectedPresentationId(),
+    slideIndex: 0
+  });
+  await loadSelectedPresentationCache(0);
+});
+
 el.presentationSelect.addEventListener('change', async () => {
   selected = presentations[Number(el.presentationSelect.value)] || null;
   if (selected) {
-    writeStoredSelection({ presentationId: selectedPresentationId(), slideIndex: 0 });
+    selectedLibraryId = libraryIdFor(selected);
+    writeStoredSelection({
+      libraryId: selectedLibraryValue(),
+      presentationId: selectedPresentationId(),
+      slideIndex: 0
+    });
   }
   await loadSelectedPresentationCache(0);
 });
