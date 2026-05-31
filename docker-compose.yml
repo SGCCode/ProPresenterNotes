@@ -1,0 +1,11 @@
+services:
+  propresenter-notes:
+    build: .
+    environment:
+      APP_HOST: 0.0.0.0
+      APP_PORT: "3000"
+      PROPRESENTER_HOST: host.docker.internal
+      # Replace with the API port shown in ProPresenter Settings > Network.
+      PROPRESENTER_PORT: "1025"
+    ports:
+      - "3000:3000"
