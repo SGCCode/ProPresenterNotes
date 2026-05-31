@@ -211,7 +211,7 @@ input {
 
 @media (min-width: 901px) {
   .app {
-    --thumbnail-sidebar-width: clamp(212px, 22vw, 300px);
+    --thumbnail-sidebar-width: clamp(176px, 20vw, 360px);
     grid-template-columns: var(--thumbnail-sidebar-width) minmax(0, 1fr);
     align-items: start;
   }
@@ -241,8 +241,9 @@ input {
   }
 
   .thumbnailStrip {
-    --thumbnail-min: 0;
-    grid-template-columns: minmax(0, 1fr);
+    --thumbnail-min: clamp(112px, 10vw, 164px);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--thumbnail-min)), 1fr));
+    align-content: start;
     flex: 1;
     max-height: none;
     min-height: 0;
@@ -251,6 +252,12 @@ input {
   .now,
   .debug {
     grid-column: 2;
+  }
+}
+
+@media (min-width: 1200px) {
+  .app {
+    --thumbnail-sidebar-width: clamp(300px, 26vw, 420px);
   }
 }
 
