@@ -22,6 +22,8 @@ let changeTimer = null;
 let touchStart = null;
 
 const selectionStorageKey = 'propresenter-notes-selection';
+const presentationsStorageKey = 'propresenter-notes-presentations';
+const presentationCacheStoragePrefix = 'propresenter-notes-cache:';
 
 function readStoredSelection() {
   try {
@@ -32,12 +34,53 @@ function readStoredSelection() {
 }
 
 function writeStoredSelection(updates) {
+  writeStoredJson(selectionStorageKey, { ...readStoredSelection(), ...updates });
+}
+
+function readStoredJson(key, fallback = null) {
   try {
-    const nextSelection = { ...readStoredSelection(), ...updates };
-    window.localStorage.setItem(selectionStorageKey, JSON.stringify(nextSelection));
+    const stored = window.localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : fallback;
   } catch (err) {
-    // Ignore storage failures so the controller still works in private browsing modes.
+    return fallback;
   }
+}
+
+function writeStoredJson(key, value) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+function cacheKeyForPresentation(presentationId) {
+  return `${presentationCacheStoragePrefix}${presentationId}`;
+}
+
+function offlineSafeCache(cache) {
+  if (!cache) return null;
+  return {
+    ...cache,
+    cachedAt: new Date().toISOString(),
+    source: 'browser',
+    // The raw ProPresenter payload can be very large. Slides already contain the
+    // full note text and thumbnails needed for offline speaker navigation.
+    raw: undefined
+  };
+}
+
+function readStoredPresentationCache(presentationId) {
+  if (!presentationId) return null;
+  const cached = readStoredJson(cacheKeyForPresentation(presentationId));
+  return cached?.slides?.length ? cached : null;
+}
+
+function writeStoredPresentationCache(cache) {
+  const safeCache = offlineSafeCache(cache);
+  if (!safeCache?.presentationId) return false;
+  return writeStoredJson(cacheKeyForPresentation(safeCache.presentationId), safeCache);
 }
 
 async function request(path, options = {}) {
@@ -185,7 +228,21 @@ async function loadPresentations(keepCurrent = false) {
   const storedSelection = readStoredSelection();
   const previousId = keepCurrent ? selectedPresentationId() : storedSelection.presentationId || '';
   const previousLibraryId = keepCurrent ? selectedLibraryValue() : storedSelection.libraryId || '';
-  presentations = await request('/api/presentations');
+
+  try {
+    presentations = await request('/api/presentations');
+    writeStoredJson(presentationsStorageKey, presentations);
+  } catch (err) {
+    presentations = readStoredJson(presentationsStorageKey, []);
+    if (presentations.length) {
+      setCacheStatus(
+        `Using the last presentation list because ProPresenter is unreachable: ${err.message}`,
+        true
+      );
+    } else {
+      throw err;
+    }
+  }
 
   if (!presentations.length) {
     el.librarySelect.innerHTML = '';
@@ -312,16 +369,35 @@ async function loadSelectedPresentationCache(preferredSlideIndex = selectedSlide
   setCacheStatus('Loading presentation thumbnails and notes...');
   try {
     selectedCache = await request(`/api/presentation-cache/${encodeURIComponent(presentationId)}`);
+    const saved = writeStoredPresentationCache(selectedCache);
     const slideIndex = Number.isFinite(preferredSlideIndex) ? preferredSlideIndex : 0;
     renderSlides();
     showSlide(slideIndex);
-    setCacheStatus(`Cached ${selectedCache.slides.length} slides. Notes will stay unchanged until you refresh.`);
+    setCacheStatus(
+      saved
+        ? `Cached ${selectedCache.slides.length} slides for offline notes and navigation.`
+        : `Cached ${selectedCache.slides.length} slides for this session. Browser storage is full or unavailable.`,
+      !saved
+    );
     startChangeWatcher();
   } catch (err) {
-    selectedCache = null;
-    renderSlides();
-    showSlide(0);
-    setCacheStatus(`Unable to cache presentation: ${err.message}`, true);
+    const storedCache = readStoredPresentationCache(presentationId);
+    if (storedCache) {
+      selectedCache = storedCache;
+      const slideIndex = Number.isFinite(preferredSlideIndex) ? preferredSlideIndex : 0;
+      renderSlides();
+      showSlide(slideIndex);
+      setCacheStatus(
+        `Offline mode: using ${selectedCache.slides.length} cached slides. Advance controls will keep notes moving locally.`,
+        true
+      );
+      startChangeWatcher();
+    } else {
+      selectedCache = null;
+      renderSlides();
+      showSlide(0);
+      setCacheStatus(`Unable to cache presentation: ${err.message}`, true);
+    }
   } finally {
     el.refresh.disabled = false;
   }
@@ -347,14 +423,21 @@ function startChangeWatcher() {
 }
 
 async function triggerSlide(index) {
-  if (!selected) return;
-  await request('/api/trigger/slide', {
-    method: 'POST',
-    body: JSON.stringify({
-      presentationId: selectedPresentationId(),
-      index
-    })
-  });
+  if (!selected) return false;
+  try {
+    await request('/api/trigger/slide', {
+      method: 'POST',
+      body: JSON.stringify({
+        presentationId: selectedPresentationId(),
+        index
+      })
+    });
+    return true;
+  } catch (err) {
+    setConnection(false, `ProPresenter unreachable. Notes are advancing from the local cache: ${err.message}`);
+    setCacheStatus('Offline mode: slide notes are advancing locally from the cached presentation.', true);
+    return false;
+  }
 }
 
 async function trigger(direction) {
@@ -432,6 +515,12 @@ document.addEventListener('keydown', (event) => {
 await checkHealth();
 const storedSelection = readStoredSelection();
 const storedSlideIndex = Number(storedSelection.slideIndex);
-await loadPresentations();
-const shouldRestoreStoredSlide = selectedPresentationId() === storedSelection.presentationId;
-await loadSelectedPresentationCache(shouldRestoreStoredSlide && Number.isFinite(storedSlideIndex) ? storedSlideIndex : 0);
+try {
+  await loadPresentations();
+  const shouldRestoreStoredSlide = selectedPresentationId() === storedSelection.presentationId;
+  await loadSelectedPresentationCache(
+    shouldRestoreStoredSlide && Number.isFinite(storedSlideIndex) ? storedSlideIndex : 0
+  );
+} catch (err) {
+  setCacheStatus(`Unable to load presentations: ${err.message}`, true);
+}
