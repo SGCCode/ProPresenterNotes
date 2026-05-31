@@ -1,0 +1,75 @@
+{
+  "version": {
+    "status": 200,
+    "body": {
+      "api_version": "v1",
+      "host_description": "ProPresenter 7.8.1",
+      "name": "Main sanctuary Pro7 machine",
+      "os_version": "10.0.19043",
+      "platform": "win"
+    }
+  },
+  "libraries": {
+    "status": 200,
+    "body": [
+      {
+        "uuid": "30afaec9-33ff-406e-a2fa-7b7596aa56c2",
+        "name": "Default",
+        "index": 0
+      },
+      {
+        "uuid": "fbd814b9-530c-4a66-bef1-0bd5a1db44ff",
+        "name": "Sample",
+        "index": 1
+      }
+    ]
+  },
+  "library": {
+    "status": 200,
+    "body": {
+      "update_type": "all",
+      "items": [
+        {
+          "uuid": "f12ddb18-c62e-43e7-a8e0-c0d3878cf329",
+          "name": "Announcements",
+          "index": 0
+        },
+        {
+          "uuid": "ee45cc69-d632-40f0-916d-68487941fe7b",
+          "name": "Glorious Day FB LIVE",
+          "index": 1
+        },
+        {
+          "uuid": "1e8cbfb0-add2-4e17-ba88-c73831bd97b5",
+          "name": "Same God",
+          "index": 2
+        },
+        {
+          "uuid": "70623736-5b63-4dd6-83e5-2c01c2897240",
+          "name": "Sermon Deck",
+          "index": 3
+        },
+        {
+          "uuid": "b8848aa1-ab9d-4532-af52-3fde3ce52319",
+          "name": "This Is Amazing Grace BIG TEXT-1",
+          "index": 4
+        },
+        {
+          "uuid": "5584afc7-f98e-4c8e-8b6b-a9f5b66f37b8",
+          "name": "Way Maker",
+          "index": 5
+        },
+        {
+          "uuid": "f87fdb41-f9d5-41ca-9473-62f407703407",
+          "name": "Welcome Video",
+          "index": 6
+        },
+        {
+          "uuid": "b22d5e2e-3622-43b4-8724-46302ca3277c",
+          "name": "Greater Love Memorial Day",
+          "index": 7
+        }
+      ]
+    }
+  }
+}

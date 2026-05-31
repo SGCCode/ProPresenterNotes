@@ -1,6 +1,10 @@
+.git
+.github
 .venv/
+.venv
 venv/
 __pycache__/
+__pycache__
 *.py[cod]
 .pytest_cache/
 *.log
@@ -10,3 +14,4 @@ logs/
 .LSOverride
 Thumbs.db
 Desktop.ini
+.idea

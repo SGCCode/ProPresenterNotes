@@ -150,6 +150,33 @@ Then open:
 http://127.0.0.1:3000
 ```
 
+## Run tests
+
+Run the Python unit test suite locally with:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+Run the same test suite in Docker with the test build target used by CI:
+
+```bash
+docker build --target test -t propresenter-notes:test .
+docker run --rm propresenter-notes:test
+```
+
+The test suite includes a local mock ProPresenter API server backed by the captured OpenAPI example payloads in `tests/propresenter_openapi_examples.json`. Those integration tests exercise the real `ProPresenterClient` over HTTP for `/version`, `/v1/libraries`, and `/v1/library/{library_id}` without requiring a running ProPresenter instance. As more Swagger examples are collected, add them to that fixture and extend `tests/mock_propresenter_api.py` so Docker and CI continue validating against the documented API contract.
+
+To capture examples from a real ProPresenter system for review, run:
+
+```bash
+python scripts/capture_propresenter_examples.py --base-url http://127.0.0.1:1025 --output propresenter_examples_capture.json
+```
+
+The capture script reads `/version`, `/v1/libraries`, `/v1/library/{library_id}` using UUID/name/index forms, selected presentation details, the first slide thumbnail, and slide-status endpoints. It intentionally skips trigger endpoints because they mutate the live ProPresenter state. Review the generated file for sensitive presentation text before sharing it or copying examples into `tests/propresenter_openapi_examples.json`.
+
+GitHub Actions runs the Dockerized test suite on pushes to `main`, pull requests, and manual workflow dispatches.
+
 ## Run with Docker
 
 Docker is an optional deployment path; the macOS service scripts above remain supported. Build the image from this folder with:

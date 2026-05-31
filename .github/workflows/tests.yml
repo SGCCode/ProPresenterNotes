@@ -1,0 +1,22 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  docker-tests:
+    name: Dockerized Python test suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build test image
+        run: docker build --target test -t propresenter-notes:test .
+
+      - name: Run tests in Docker
+        run: docker run --rm propresenter-notes:test
