@@ -213,32 +213,52 @@ input {
     --page-gutter: 10px;
   }
 
+  html,
+  body {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
   body {
     background: #030712;
   }
 
   .app {
     width: 100%;
+    max-width: 100%;
+    min-height: 100dvh;
     margin: 0;
     gap: 10px;
-    padding: 10px 10px calc(118px + env(safe-area-inset-bottom));
+    padding: 10px 10px calc(116px + env(safe-area-inset-bottom));
   }
 
   .panel {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
     border-radius: 16px;
     padding: 14px;
   }
 
-  .topbar {
-    align-items: flex-start;
+  .topbar,
+  .controls,
+  .meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    gap: 12px;
   }
 
-  .topbar > div:first-child {
+  .topbar > div:first-child,
+  .controls label,
+  .controls select {
     min-width: 0;
+    width: 100%;
   }
 
   h1 {
     font-size: clamp(1.45rem, 8vw, 2rem);
+    line-height: 1.08;
   }
 
   p, #cacheStatus {
@@ -249,21 +269,17 @@ input {
     text-align: left;
   }
 
-  .topActions,
-  .topActions form,
-  .topActions button,
-  .controls label,
-  .controls select {
-    width: 100%;
-  }
-
   .topActions {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+    align-items: stretch;
+    gap: 10px;
+    width: 100%;
   }
 
-  .controls {
-    align-items: stretch;
+  .topActions form,
+  .topActions button {
+    width: 100%;
   }
 
   .buttonRow {
@@ -273,7 +289,7 @@ input {
     bottom: 0;
     z-index: 20;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 10px;
     padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
     background: rgba(3, 7, 18, 0.94);
@@ -285,26 +301,31 @@ input {
   .navButton {
     min-width: 0;
     min-height: 58px;
+    padding-inline: 8px;
     font-size: 1.05rem;
   }
 
   .now {
-    min-height: min(58vh, 520px);
+    min-height: clamp(320px, 56dvh, 520px);
   }
 
   .now .meta {
-    align-items: flex-start;
     gap: 6px;
   }
 
+  #slideTitle {
+    overflow-wrap: anywhere;
+  }
+
   #notes {
-    font-size: clamp(2.25rem, 13vw, 4.8rem);
+    font-size: clamp(2rem, 12vw, 4.8rem);
     line-height: 1.08;
     margin-top: 18px;
+    overflow-y: auto;
   }
 
   .thumbnailStrip {
-    grid-auto-columns: minmax(150px, 78vw);
+    grid-auto-columns: minmax(0, calc(100vw - 48px));
     gap: 10px;
     margin-inline: -4px;
     padding-inline: 4px;
