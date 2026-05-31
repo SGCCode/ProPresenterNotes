@@ -38,11 +38,18 @@ button, select, input { font: inherit; }
   gap: 16px;
 }
 
+.selectGroup {
+  flex: 1 1 620px;
+  display: grid;
+  grid-template-columns: minmax(180px, 0.8fr) minmax(260px, 1.2fr);
+  gap: 14px;
+}
+
 .topbar, .controls { justify-content: space-between; flex-wrap: wrap; }
 h1 { margin: 0; font-size: clamp(1.7rem, 3vw, 2.6rem); }
 p { margin: 6px 0 0; color: #cbd5e1; }
 
-label { display: grid; gap: 8px; min-width: min(520px, 100%); color: #cbd5e1; }
+label { display: grid; gap: 8px; min-width: 0; color: #cbd5e1; }
 select, button, input {
   min-height: var(--touch-target);
   border: 1px solid rgba(255,255,255,0.14);
@@ -244,10 +251,16 @@ input {
   }
 
   .topbar > div:first-child,
+  .selectGroup,
   .controls label,
   .controls select {
     min-width: 0;
     width: 100%;
+  }
+
+  .selectGroup {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
   }
 
   h1 {
