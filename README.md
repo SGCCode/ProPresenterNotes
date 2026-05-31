@@ -4,6 +4,20 @@
 
 A local web app for a Mac Studio that controls ProPresenter through the ProPresenter public REST API. It does **not** require Docker or npm packages. It now runs as a Flask application.
 
+## Screenshots
+
+### Main notes view
+
+![Main notes view showing slide thumbnails, selected slide notes, and navigation controls.](docs/screenshots/main-notes-view.png)
+
+### Library selector
+
+![Library selector showing available ProPresenter libraries.](docs/screenshots/library-selector.png)
+
+### Presentation selector
+
+![Presentation selector showing available presentations in the selected library.](docs/screenshots/presentation-selector.png)
+
 ## What it does
 
 - Shows a selector for presentations found in ProPresenter libraries.
