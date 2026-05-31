@@ -9,7 +9,7 @@ A local web app for a Mac Studio that controls ProPresenter through the ProPrese
 - Provides Previous and Next buttons, including a thumb-friendly sticky mobile control bar.
 - Supports keyboard navigation with Arrow Left, Arrow Right, Page Up, and Page Down, plus swipe navigation on touch screens.
 - Shows slide notes when your ProPresenter API exposes notes in the slide/status/presentation payloads.
-- Adapts to phones and tablets with larger tap targets, horizontally snapping slide thumbnails, and simplified small-screen layout.
+- Adapts to phones and tablets with larger tap targets, responsive slide thumbnails, and simplified small-screen layout.
 - Runs locally on the Mac Studio as a Flask web application.
 - Can install as a macOS system service using `launchd`.
 

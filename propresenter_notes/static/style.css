@@ -109,25 +109,26 @@ h2 {
 }
 
 .thumbnailStrip {
+  --thumbnail-min: clamp(104px, 16vw, 168px);
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(150px, 190px);
-  gap: 14px;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  padding: 4px 4px 12px;
-  scroll-snap-type: x mandatory;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--thumbnail-min)), 1fr));
+  gap: 12px;
+  max-height: min(42vh, 360px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
 }
 
 .thumbnailCard {
-  display: grid;
-  gap: 8px;
-  padding: 8px;
+  display: block;
+  min-width: 0;
+  padding: 6px;
   border-radius: 16px;
   background: #020617;
   text-align: left;
-  scroll-snap-align: start;
 }
 
 .thumbnailCard:hover,
@@ -154,13 +155,6 @@ h2 {
   place-items: center;
   color: #93c5fd;
   font-weight: 800;
-}
-
-.thumbnailCard span {
-  min-height: 2.5em;
-  color: #e5e7eb;
-  font-size: 0.92rem;
-  line-height: 1.25;
 }
 
 .emptySlides {
@@ -325,14 +319,16 @@ input {
   }
 
   .thumbnailStrip {
-    grid-auto-columns: minmax(0, calc(100vw - 48px));
-    gap: 10px;
-    margin-inline: -4px;
-    padding-inline: 4px;
+    --thumbnail-min: clamp(82px, 28vw, 128px);
+    gap: 8px;
+    max-height: clamp(118px, 24dvh, 220px);
+    margin-inline: -2px;
+    padding-inline: 2px;
   }
 
   .thumbnailCard {
     min-height: 44px;
+    padding: 4px;
   }
 
   .debug {
