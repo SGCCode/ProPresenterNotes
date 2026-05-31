@@ -17,6 +17,7 @@ let selected = null;
 let selectedSlideIndex = 0;
 let selectedCache = null;
 let changeTimer = null;
+let touchStart = null;
 
 async function request(path, options = {}) {
   const response = await fetch(path, {
@@ -111,12 +112,19 @@ function slideNotes(slide) {
   return slide?.notes || 'No slide notes found for this slide.';
 }
 
+function updateNavState() {
+  const hasSlides = Boolean(selectedCache?.slides?.length);
+  el.previous.disabled = !hasSlides || selectedSlideIndex <= 0;
+  el.next.disabled = !hasSlides || selectedSlideIndex >= (selectedCache?.slides?.length || 1) - 1;
+}
+
 function showSlide(index) {
   if (!selectedCache?.slides?.length) {
     selectedSlideIndex = 0;
     el.slideNumber.textContent = 'Slide —';
     el.slideTitle.textContent = '';
     el.notes.textContent = 'No notes loaded yet.';
+    updateNavState();
     return;
   }
 
@@ -129,8 +137,13 @@ function showSlide(index) {
   el.raw.textContent = JSON.stringify(slide, null, 2);
 
   [...el.thumbnailStrip.querySelectorAll('.thumbnailCard')].forEach((button) => {
-    button.classList.toggle('active', Number(button.dataset.index) === clampedIndex);
+    const isActive = Number(button.dataset.index) === clampedIndex;
+    button.classList.toggle('active', isActive);
+    if (isActive && window.matchMedia('(max-width: 700px)').matches) {
+      button.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
   });
+  updateNavState();
 }
 
 function renderSlides() {
@@ -244,9 +257,25 @@ async function trigger(direction) {
     await triggerSlide(nextIndex);
     showSlide(nextIndex);
   } finally {
-    el.previous.disabled = false;
-    el.next.disabled = false;
+    updateNavState();
   }
+}
+
+function handleTouchStart(event) {
+  const touch = event.changedTouches[0];
+  touchStart = { x: touch.clientX, y: touch.clientY };
+}
+
+function handleTouchEnd(event) {
+  if (!touchStart) return;
+
+  const touch = event.changedTouches[0];
+  const dx = touch.clientX - touchStart.x;
+  const dy = touch.clientY - touchStart.y;
+  touchStart = null;
+
+  if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
+  trigger(dx < 0 ? 'next' : 'previous');
 }
 
 el.refresh.addEventListener('click', async () => {
@@ -265,6 +294,8 @@ el.presentationSelect.addEventListener('change', async () => {
 
 el.previous.addEventListener('click', () => trigger('previous'));
 el.next.addEventListener('click', () => trigger('next'));
+el.notes.addEventListener('touchstart', handleTouchStart, { passive: true });
+el.notes.addEventListener('touchend', handleTouchEnd, { passive: true });
 
 document.addEventListener('keydown', (event) => {
   if (event.key === 'ArrowRight' || event.key === 'PageDown') trigger('next');
