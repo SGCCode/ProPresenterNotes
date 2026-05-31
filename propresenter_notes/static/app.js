@@ -139,8 +139,8 @@ function showSlide(index) {
   [...el.thumbnailStrip.querySelectorAll('.thumbnailCard')].forEach((button) => {
     const isActive = Number(button.dataset.index) === clampedIndex;
     button.classList.toggle('active', isActive);
-    if (isActive && window.matchMedia('(max-width: 700px)').matches) {
-      button.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    if (isActive) {
+      button.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
     }
   });
   updateNavState();
@@ -175,10 +175,6 @@ function renderSlides() {
       placeholder.textContent = `Slide ${slide.number}`;
       button.appendChild(placeholder);
     }
-
-    const caption = document.createElement('span');
-    caption.textContent = `${slide.number}. ${slide.title || 'Untitled'}`;
-    button.appendChild(caption);
 
     button.addEventListener('click', () => showSlide(slide.index));
     el.thumbnailStrip.appendChild(button);
