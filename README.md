@@ -9,6 +9,7 @@ A local web app for a Mac Studio that controls ProPresenter through the ProPrese
 - Shows a selector for presentations found in ProPresenter libraries.
 - Triggers the selected presentation at slide 1 when selected.
 - Provides Previous and Next buttons, including a thumb-friendly sticky mobile control bar.
+- Caches the selected presentation's slides, notes, and thumbnails in the browser so notes can keep advancing locally if ProPresenter becomes unreachable.
 - Supports keyboard navigation with Arrow Left, Arrow Right, Page Up, and Page Down, plus swipe navigation on touch screens.
 - Shows slide notes when your ProPresenter API exposes notes in the slide/status/presentation payloads.
 - Adapts to phones and tablets with larger tap targets, responsive slide thumbnails, and simplified small-screen layout.
@@ -231,6 +232,7 @@ Change `app_port` in `config.json`, then restart the app or service.
 - Confirm the ProPresenter public/network API is enabled.
 - Confirm `propresenter_host` and `propresenter_port` match the ProPresenter machine.
 - Confirm both devices are on the same network if ProPresenter is not on the same Mac.
+- If the selected presentation was cached before the outage, the UI enters offline mode and keeps the notes moving locally when you press Previous, Next, keyboard shortcuts, swipe, or tap thumbnails. ProPresenter itself will not change slides again until its API connection is restored.
 
 ### Notes are blank
 
