@@ -13,4 +13,4 @@ COPY propresenter_notes/ ./propresenter_notes/
 
 EXPOSE 3000
 
-CMD ["python", "server.py"]
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${APP_PORT:-3000} server:app"]
