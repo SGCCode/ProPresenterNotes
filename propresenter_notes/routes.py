@@ -197,16 +197,13 @@ def api_trigger_previous() -> tuple[str, int]:
 @bp.post("/api/trigger/slide")
 def api_trigger_slide() -> tuple[Response | str, int]:
     body = request.get_json(silent=True) or {}
-    library_id = body.get("libraryId")
     presentation_id = body.get("presentationId")
     index = body.get("index", 0)
-    if not library_id or not presentation_id:
-        return jsonify({"error": "libraryId and presentationId are required"}), 400
+    if not presentation_id:
+        return jsonify({"error": "presentationId is required"}), 400
 
     _client().fetch(
-        "/v1/trigger/library/"
-        f"{urllib.parse.quote(str(library_id), safe='')}/"
-        f"{urllib.parse.quote(str(presentation_id), safe='')}/"
-        f"{urllib.parse.quote(str(index), safe='')}"
+        f"/v1/presentation/{urllib.parse.quote(str(presentation_id), safe='')}/"
+        f"{urllib.parse.quote(str(index), safe='')}/trigger"
     )
     return "", 204

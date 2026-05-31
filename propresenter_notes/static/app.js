@@ -43,10 +43,6 @@ function selectedPresentationId() {
   return selected ? idValue(selected.presentation) : '';
 }
 
-function selectedLibraryId() {
-  return selected ? idValue(selected.library) : '';
-}
-
 function labelFor(item) {
   const lib = item.library?.name || item.library?.uuid || 'Library';
   const pres = item.presentation?.name || item.presentation?.uuid || `Presentation ${item.presentation?.index ?? ''}`;
@@ -176,7 +172,10 @@ function renderSlides() {
       button.appendChild(placeholder);
     }
 
-    button.addEventListener('click', () => showSlide(slide.index));
+    button.addEventListener('click', async () => {
+      await triggerSlide(slide.index);
+      showSlide(slide.index);
+    });
     el.thumbnailStrip.appendChild(button);
   });
 }
@@ -235,7 +234,6 @@ async function triggerSlide(index) {
   await request('/api/trigger/slide', {
     method: 'POST',
     body: JSON.stringify({
-      libraryId: selectedLibraryId(),
       presentationId: selectedPresentationId(),
       index
     })
