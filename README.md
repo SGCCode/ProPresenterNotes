@@ -150,6 +150,22 @@ Then open:
 http://127.0.0.1:3000
 ```
 
+## Docker alternative
+
+Docker is an optional deployment path; the macOS service scripts above remain supported. Build and run the app with:
+
+```bash
+docker compose up --build
+```
+
+The compose file exposes the web UI on:
+
+```text
+http://127.0.0.1:3000
+```
+
+When ProPresenter is running on the Docker host, keep `PROPRESENTER_HOST=host.docker.internal` and update `PROPRESENTER_PORT` in `docker-compose.yml` to match the API port shown in **Settings > Network**. You can also override these values at runtime with environment variables.
+
 ## Troubleshooting
 
 ### macOS says the command file cannot be opened
